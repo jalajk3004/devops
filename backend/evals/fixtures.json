@@ -1,0 +1,32 @@
+[
+  {
+    "name": "clean_software_invoice",
+    "rawText": "INVOICE #4471\nFrom: Notion Labs Inc.\nBill To: Aurex Studio\nDescription: Notion Team Plan - Annual\nAmount Due: $960.00 USD\nDue Date: 2026-10-01\n",
+    "expected": {
+      "vendor": "Notion Labs Inc.",
+      "amount": 960.0,
+      "currency": "USD",
+      "category": "software"
+    }
+  },
+  {
+    "name": "messy_utility_invoice",
+    "rawText": "BSES Rajdhani Power Ltd - Electricity Bill\nConsumer: Aurex Studio Office\nTotal Payable: INR 8,450.75\nDue on or before 20-Sep-2026\n",
+    "expected": {
+      "vendor": "BSES Rajdhani Power Ltd",
+      "amount": 8450.75,
+      "currency": "INR",
+      "category": "utilities"
+    }
+  },
+  {
+    "name": "logistics_invoice_with_noise",
+    "rawText": "*** DELIVERY RECEIPT - NOT AN INVOICE ***\n(ignore banner)\nBluedart Express\nInvoice No: BD-99213\nShipment charges: $142.30\nPayment due: 2026-08-25\n",
+    "expected": {
+      "vendor": "Bluedart Express",
+      "amount": 142.3,
+      "currency": "USD",
+      "category": "logistics"
+    }
+  }
+]

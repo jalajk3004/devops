@@ -1,0 +1,39 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.badge[data-status="PENDING"] {
+  background: var(--status-pending-bg);
+  color: var(--status-pending-fg);
+}
+
+.badge[data-status="PROCESSING"] {
+  background: var(--status-processing-bg);
+  color: var(--status-processing-fg);
+}
+
+.badge[data-status="EXTRACTED"] {
+  background: var(--status-extracted-bg);
+  color: var(--status-extracted-fg);
+}
+
+.badge[data-status="FAILED"] {
+  background: var(--status-failed-bg);
+  color: var(--status-failed-fg);
+}
+
+/* Stamped states get a double-outline "ink stamp" treatment */
+.stamped {
+  border-radius: 3px;
+  border: 1.5px solid currentColor;
+  box-shadow: 0 0 0 2px var(--surface) inset;
+  font-weight: 700;
+  transform: rotate(-2deg);
+}

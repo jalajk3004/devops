@@ -1,0 +1,68 @@
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 32px;
+  border-bottom: 1px solid var(--border);
+}
+
+.wordmark {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.wordmarkMain {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.12em;
+}
+
+.wordmarkSub {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.pill[data-state="up"] .dot {
+  background: var(--status-extracted-fg);
+  box-shadow: 0 0 0 0 rgba(95, 196, 145, 0.6);
+  animation: pulse 2s ease-out infinite;
+}
+
+.pill[data-state="down"] .dot {
+  background: var(--status-failed-fg);
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(95, 196, 145, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(95, 196, 145, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(95, 196, 145, 0);
+  }
+}
