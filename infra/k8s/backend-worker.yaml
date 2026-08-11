@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: invoice-worker
+  namespace: invoice-triage
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: invoice-worker }
+  template:
+    metadata:
+      labels: { app: invoice-worker }
+    spec:
+      containers:
+        - name: worker
+          image: invoice-backend:local
+          imagePullPolicy: Never
+          command: ["node", "dist/queue/worker.js"]
+          envFrom:
+            - secretRef: { name: db-credentials }
+          env:
+            - name: REDIS_URL
+              value: "redis://redis:6379"
+            - name: LLM_PROVIDER
+              value: "mock"
+            - name: WORKER_CONCURRENCY
+              value: "5"
+          resources:
+            requests: { cpu: "100m", memory: "128Mi" }
+            limits:   { cpu: "500m", memory: "256Mi" }
+          # No HTTP probes possible - the worker doesn't serve HTTP.
+          # Kubernetes' default behavior (restart on process crash/exit)
+          # is the correct fallback here. A more advanced setup would
+          # have the worker write a heartbeat timestamp to a file and
+          # use an `exec` probe checking that file's freshness - worth
+          # mentioning as a "next step" if asked in an interview.

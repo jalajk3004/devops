@@ -1,0 +1,42 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: invoice-api-hpa
+  namespace: invoice-triage
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: invoice-api
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70   # scale up once average CPU across pods crosses 70% of the requested 100m
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 60   # wait 60s of sustained low load before scaling down - avoids flapping
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: invoice-worker-hpa
+  namespace: invoice-triage
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: invoice-worker
+  minReplicas: 2
+  maxReplicas: 8   # worker scales more aggressively - it's the thing under real load when invoices pile up
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

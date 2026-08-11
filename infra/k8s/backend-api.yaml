@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: invoice-api
+  namespace: invoice-triage
+spec:
+  replicas: 2   # start at 2, not 1 - proves rolling updates work with zero downtime
+  selector:
+    matchLabels: { app: invoice-api }
+  strategy:
+    rollingUpdate:
+      maxSurge: 1         # allowed to spin up 1 extra pod above desired count during rollout
+      maxUnavailable: 0   # never drop below the desired count while rolling - real zero-downtime
+    type: RollingUpdate
+  template:
+    metadata:
+      labels: { app: invoice-api }
+    spec:
+      containers:
+        - name: api
+          image: invoice-backend:local
+          imagePullPolicy: Never   # image was built directly into Minikube - never pull from a registry
+          command: ["node", "dist/index.js"]
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - secretRef: { name: db-credentials }
+          env:
+            - name: REDIS_URL
+              value: "redis://redis:6379"
+            - name: PORT
+              value: "3000"
+            - name: LLM_PROVIDER
+              value: "mock"
+            - name: CORS_ORIGIN
+              value: "http://invoice.local"
+          resources:
+            requests: { cpu: "100m", memory: "128Mi" }   # guaranteed minimum - scheduler uses this to place the pod
+            limits:   { cpu: "500m", memory: "256Mi" }   # hard ceiling - pod gets OOMKilled if it exceeds memory
+          readinessProbe:
+            httpGet: { path: /readyz, port: 3000 }   # "can this pod take traffic right now" - checks DB+Redis reachable
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet: { path: /healthz, port: 3000 }   # "is this process alive at all" - simpler check, restarts pod if it fails
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: invoice-api
+  namespace: invoice-triage
+spec:
+  selector: { app: invoice-api }
+  ports:
+    - port: 3000
+      targetPort: 3000
