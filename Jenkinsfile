@@ -176,6 +176,21 @@ pipeline {
                 }
             }
         }
+        stage('Deploy to Minikube') {
+            agent any       
+            steps {
+                withCredentials([file(credentialsId: 'minikube-kubeconfig', variable: 'KUBECONFIG')]) {
+                    sh '''
+                kubectl set image deployment/invoice-api api=invoice-backend:local -n invoice-triage
+                kubectl set image deployment/invoice-worker worker=invoice-backend:local -n invoice-triage
+                kubectl set image deployment/invoice-frontend frontend=invoice-frontend:local -n invoice-triage
+                kubectl rollout status deployment/invoice-api -n invoice-triage --timeout=90s
+                kubectl rollout status deployment/invoice-worker -n invoice-triage --timeout=90s
+                kubectl rollout status deployment/invoice-frontend -n invoice-triage --timeout=90s
+            ''' 
+                }
+            }
+        }
     }
 
     post {
