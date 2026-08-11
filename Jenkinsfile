@@ -7,6 +7,7 @@ pipeline {
 
     environment {
         DOCKERHUB_USER = 'jalajkumarr'
+
         BACKEND_IMAGE  = "${DOCKERHUB_USER}/invoice-triage-backend"
         FRONTEND_IMAGE = "${DOCKERHUB_USER}/invoice-triage-frontend"
     }
@@ -89,23 +90,46 @@ pipeline {
                 sh 'docker info'
 
                 script {
-                    echo "Building backend Docker image..."
+                    def image = "${BACKEND_IMAGE}"
+                    def tag = "${env.BUILD_NUMBER}"
 
-                    def img = docker.build(
-                        "${BACKEND_IMAGE}:${env.BUILD_NUMBER}",
+                    echo "========================================"
+                    echo "Building Backend Docker Image"
+                    echo "Image: ${image}:${tag}"
+                    echo "========================================"
+
+                    docker.build(
+                        "${image}:${tag}",
                         "./backend"
                     )
 
                     echo "Backend Docker image built successfully."
 
-                    docker.withRegistry(
-                        'https://registry.hub.docker.com',
-                        'dockerhub-creds'
-                    ) {
-                        echo "Pushing backend image..."
+                    withCredentials([
+                        usernamePassword(
+                            credentialsId: 'dockerhub-creds',
+                            usernameVariable: 'DOCKERHUB_USER',
+                            passwordVariable: 'DOCKERHUB_PWD'
+                        )
+                    ]) {
 
-                        img.push()
-                        img.push("latest")
+                        sh """
+                            echo "Logging in to Docker Hub..."
+
+                            echo "\$DOCKERHUB_PWD" | docker login \
+                                -u "\$DOCKERHUB_USER" \
+                                --password-stdin
+
+                            echo "Docker Hub login successful."
+
+                            echo "Pushing backend image: ${image}:${tag}"
+                            docker push "${image}:${tag}"
+
+                            echo "Pushing backend image: ${image}:latest"
+                            docker push "${image}:latest"
+
+                            echo "Backend images pushed successfully."
+                        """
                     }
                 }
             }
@@ -119,23 +143,46 @@ pipeline {
                 sh 'docker info'
 
                 script {
-                    echo "Building frontend Docker image..."
+                    def image = "${FRONTEND_IMAGE}"
+                    def tag = "${env.BUILD_NUMBER}"
 
-                    def img = docker.build(
-                        "${FRONTEND_IMAGE}:${env.BUILD_NUMBER}",
+                    echo "========================================"
+                    echo "Building Frontend Docker Image"
+                    echo "Image: ${image}:${tag}"
+                    echo "========================================"
+
+                    docker.build(
+                        "${image}:${tag}",
                         "--build-arg NEXT_PUBLIC_API_URL=http://localhost:3000 ./frontend"
                     )
 
                     echo "Frontend Docker image built successfully."
 
-                    docker.withRegistry(
-                        'https://registry.hub.docker.com',
-                        'dockerhub-creds'
-                    ) {
-                        echo "Pushing frontend image..."
+                    withCredentials([
+                        usernamePassword(
+                            credentialsId: 'dockerhub-creds',
+                            usernameVariable: 'DOCKERHUB_USER',
+                            passwordVariable: 'DOCKERHUB_PWD'
+                        )
+                    ]) {
 
-                        img.push()
-                        img.push("latest")
+                        sh """
+                            echo "Logging in to Docker Hub..."
+
+                            echo "\$DOCKERHUB_PWD" | docker login \
+                                -u "\$DOCKERHUB_USER" \
+                                --password-stdin
+
+                            echo "Docker Hub login successful."
+
+                            echo "Pushing frontend image: ${image}:${tag}"
+                            docker push "${image}:${tag}"
+
+                            echo "Pushing frontend image: ${image}:latest"
+                            docker push "${image}:latest"
+
+                            echo "Frontend images pushed successfully."
+                        """
                     }
                 }
             }
@@ -144,11 +191,21 @@ pipeline {
 
     post {
         success {
-            echo "Build ${env.BUILD_NUMBER} succeeded — images pushed as tag ${env.BUILD_NUMBER} and latest."
+            echo "========================================"
+            echo "BUILD SUCCESSFUL"
+            echo "Build Number: ${env.BUILD_NUMBER}"
+            echo "Backend: ${BACKEND_IMAGE}:${env.BUILD_NUMBER}"
+            echo "Backend: ${BACKEND_IMAGE}:latest"
+            echo "Frontend: ${FRONTEND_IMAGE}:${env.BUILD_NUMBER}"
+            echo "Frontend: ${FRONTEND_IMAGE}:latest"
+            echo "========================================"
         }
 
         failure {
-            echo "Build failed — check the stage above for which gate blocked it."
+            echo "========================================"
+            echo "BUILD FAILED"
+            echo "Check the failed stage above."
+            echo "========================================"
         }
     }
 }
