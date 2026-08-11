@@ -110,13 +110,7 @@ pipeline {
 
                     echo "Backend latest tag created."
 
-                    withCredentials([
-                        usernamePassword(
-                            credentialsId: 'dockerhub-creds',
-                            usernameVariable: 'DOCKERHUB_USER',
-                            passwordVariable: 'DOCKERHUB_PWD'
-                        )
-                    ]) {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'DOCKERHUB_PWD', usernameVariable: 'DOCKERHUB_USER')]) {
                         sh """
                             echo "\$DOCKERHUB_PWD" | docker login \
                                 -u "\$DOCKERHUB_USER" \
@@ -164,13 +158,7 @@ pipeline {
 
                     echo "Frontend latest tag created."
 
-                    withCredentials([
-                        usernamePassword(
-                            credentialsId: 'dockerhub-creds',
-                            usernameVariable: 'DOCKERHUB_USER',
-                            passwordVariable: 'DOCKERHUB_PWD'
-                        )
-                    ]) {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'DOCKERHUB_PWD', usernameVariable: 'DOCKERHUB_USER')]) {
                         sh """
                             echo "\$DOCKERHUB_PWD" | docker login \
                                 -u "\$DOCKERHUB_USER" \
