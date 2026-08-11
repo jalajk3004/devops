@@ -7,7 +7,6 @@ pipeline {
 
     environment {
         DOCKERHUB_USER = 'jalajkumarr'
-
         BACKEND_IMAGE  = "${DOCKERHUB_USER}/invoice-triage-backend"
         FRONTEND_IMAGE = "${DOCKERHUB_USER}/invoice-triage-frontend"
     }
@@ -93,17 +92,23 @@ pipeline {
                     def image = "${BACKEND_IMAGE}"
                     def tag = "${env.BUILD_NUMBER}"
 
-                    echo "========================================"
-                    echo "Building Backend Docker Image"
-                    echo "Image: ${image}:${tag}"
-                    echo "========================================"
+                    echo "Building backend image: ${image}:${tag}"
 
                     docker.build(
                         "${image}:${tag}",
                         "./backend"
                     )
 
-                    echo "Backend Docker image built successfully."
+                    echo "Backend image built successfully."
+
+                    // Create the latest tag explicitly
+                    sh """
+                        docker tag \
+                            "${image}:${tag}" \
+                            "${image}:latest"
+                    """
+
+                    echo "Backend latest tag created."
 
                     withCredentials([
                         usernamePassword(
@@ -112,20 +117,15 @@ pipeline {
                             passwordVariable: 'DOCKERHUB_PWD'
                         )
                     ]) {
-
                         sh """
-                            echo "Logging in to Docker Hub..."
-
                             echo "\$DOCKERHUB_PWD" | docker login \
                                 -u "\$DOCKERHUB_USER" \
                                 --password-stdin
 
-                            echo "Docker Hub login successful."
-
-                            echo "Pushing backend image: ${image}:${tag}"
+                            echo "Pushing ${image}:${tag}"
                             docker push "${image}:${tag}"
 
-                            echo "Pushing backend image: ${image}:latest"
+                            echo "Pushing ${image}:latest"
                             docker push "${image}:latest"
 
                             echo "Backend images pushed successfully."
@@ -146,17 +146,23 @@ pipeline {
                     def image = "${FRONTEND_IMAGE}"
                     def tag = "${env.BUILD_NUMBER}"
 
-                    echo "========================================"
-                    echo "Building Frontend Docker Image"
-                    echo "Image: ${image}:${tag}"
-                    echo "========================================"
+                    echo "Building frontend image: ${image}:${tag}"
 
                     docker.build(
                         "${image}:${tag}",
                         "--build-arg NEXT_PUBLIC_API_URL=http://localhost:3000 ./frontend"
                     )
 
-                    echo "Frontend Docker image built successfully."
+                    echo "Frontend image built successfully."
+
+                    // Create the latest tag explicitly
+                    sh """
+                        docker tag \
+                            "${image}:${tag}" \
+                            "${image}:latest"
+                    """
+
+                    echo "Frontend latest tag created."
 
                     withCredentials([
                         usernamePassword(
@@ -165,20 +171,15 @@ pipeline {
                             passwordVariable: 'DOCKERHUB_PWD'
                         )
                     ]) {
-
                         sh """
-                            echo "Logging in to Docker Hub..."
-
                             echo "\$DOCKERHUB_PWD" | docker login \
                                 -u "\$DOCKERHUB_USER" \
                                 --password-stdin
 
-                            echo "Docker Hub login successful."
-
-                            echo "Pushing frontend image: ${image}:${tag}"
+                            echo "Pushing ${image}:${tag}"
                             docker push "${image}:${tag}"
 
-                            echo "Pushing frontend image: ${image}:latest"
+                            echo "Pushing ${image}:latest"
                             docker push "${image}:latest"
 
                             echo "Frontend images pushed successfully."
