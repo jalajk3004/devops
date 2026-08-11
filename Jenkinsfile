@@ -1,6 +1,10 @@
 pipeline{
     agent none
 
+    options {
+        skipDefaultCheckout(true)
+    }
+
     environment{
         DOCKERHUB_USER = 'jalajkumarr'   
         BACKEND_IMAGE   = "${DOCKERHUB_USER}/invoice-triage-backend"
@@ -76,21 +80,35 @@ pipeline{
             }
         }
 
-        stage('Build & Push Frontend Image') {
-            agent any
-            steps {
-                script {
-                    docker.withRegistry('https://registry.hub.docker.com', 'dockerhub-creds') {
-                        def img = docker.build(
-                            "${FRONTEND_IMAGE}:${env.BUILD_NUMBER}",
-                            "--build-arg NEXT_PUBLIC_API_URL=http://localhost:3000 ./frontend"
-                        )
-                        img.push()
-                        img.push("latest")
-                    }
-                }
+        stage('Build & Push Backend Image') {
+    agent any
+
+    steps {
+        sh 'docker --version'
+        sh 'docker info'
+
+        script {
+            echo "Building backend Docker image..."
+
+            def img = docker.build(
+                "${BACKEND_IMAGE}:${env.BUILD_NUMBER}",
+                "./backend"
+            )
+
+            echo "Backend Docker image built successfully."
+
+            docker.withRegistry(
+                'https://registry.hub.docker.com',
+                'dockerhub-creds'
+            ) {
+                echo "Pushing backend image..."
+
+                img.push()
+                img.push("latest")
             }
         }
+    }
+}
     }
 
     post {
