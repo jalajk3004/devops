@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: invoice-api-monitor
+  namespace: invoice-triage
+  labels:
+    # This label is what tells the kube-prometheus-stack's Prometheus
+    # instance to notice this ServiceMonitor at all - by default it's
+    # configured to watch ServiceMonitors with this specific label.
+    release: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: invoice-api   # must match the label on your invoice-api Service
+  namespaceSelector:
+    matchNames:
+      - invoice-triage
+  endpoints:
+    - port: "3000"        # the port name/number on the Service to scrape
+      path: /metrics       # your Express route that serves Prometheus metrics
+      interval: 15s        # how often Prometheus pulls
