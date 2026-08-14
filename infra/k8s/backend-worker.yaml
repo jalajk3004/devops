@@ -14,7 +14,7 @@ spec:
       containers:
         - name: worker
           image: invoice-backend:local
-          imagePullPolicy: Never
+          imagePullPolicy: Always
           command: ["node", "dist/queue/worker.js"]
           envFrom:
             - secretRef: { name: db-credentials }

@@ -19,7 +19,7 @@ spec:
       containers:
         - name: api
           image: invoice-backend:local
-          imagePullPolicy: Never   # image was built directly into Minikube - never pull from a registry
+          imagePullPolicy: Always   # image was built directly into Minikube - never pull from a registry
           command: ["node", "dist/index.js"]
           ports:
             - containerPort: 3000
