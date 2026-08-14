@@ -151,7 +151,7 @@ pipeline {
 
                     docker.build(
                         "${image}:${tag}",
-                        "--build-arg NEXT_PUBLIC_API_URL=http://localhost:3000 ./frontend"
+                        "--build-arg NEXT_PUBLIC_API_URL=http://invoice.local ./frontend"
                     )
 
                     echo "Frontend image built successfully."
