@@ -16,6 +16,9 @@ spec:
           image: jalajkumarr/invoice-triage-backend:21
           imagePullPolicy: Always
           command: ["node", "dist/queue/worker.js"]
+          ports:
+            - containerPort: 9100
+              name: metrics
           envFrom:
             - secretRef: { name: db-credentials }
           env:
@@ -25,12 +28,28 @@ spec:
               value: "mock"
             - name: WORKER_CONCURRENCY
               value: "5"
+            - name: METRICS_PORT
+              value: "9100"
           resources:
             requests: { cpu: "100m", memory: "128Mi" }
             limits:   { cpu: "500m", memory: "256Mi" }
-          # No HTTP probes possible - the worker doesn't serve HTTP.
-          # Kubernetes' default behavior (restart on process crash/exit)
-          # is the correct fallback here. A more advanced setup would
-          # have the worker write a heartbeat timestamp to a file and
+          # No HTTP liveness/readiness probes - the worker's main job doesn't
+          # serve HTTP. Kubernetes' default behavior (restart on process
+          # crash/exit) is the correct fallback here. A more advanced setup
+          # would have the worker write a heartbeat timestamp to a file and
           # use an `exec` probe checking that file's freshness - worth
           # mentioning as a "next step" if asked in an interview.
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: invoice-worker
+  namespace: invoice-triage
+  labels:
+    app: invoice-worker
+spec:
+  selector: { app: invoice-worker }
+  ports:
+    - name: metrics
+      port: 9100
+      targetPort: 9100

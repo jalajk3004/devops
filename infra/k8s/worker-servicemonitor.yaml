@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: invoice-worker-monitor
+  namespace: invoice-triage
+  labels:
+    release: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: invoice-worker
+  namespaceSelector:
+    matchNames:
+      - invoice-triage
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 15s
