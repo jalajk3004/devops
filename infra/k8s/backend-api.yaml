@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: api
-          image: invoice-backend:local
+          image: jalajkumarr/invoice-triage-backend:21
           imagePullPolicy: Always   # image was built directly into Minikube - never pull from a registry
           command: ["node", "dist/index.js"]
           ports:

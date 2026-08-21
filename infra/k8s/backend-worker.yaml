@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: worker
-          image: invoice-backend:local
+          image: jalajkumarr/invoice-triage-backend:21
           imagePullPolicy: Always
           command: ["node", "dist/queue/worker.js"]
           envFrom:
