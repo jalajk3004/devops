@@ -1,0 +1,64 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: invoice-api-alerts
+  namespace: invoice-triage
+  labels:
+    release: monitoring
+spec:
+  groups:
+    - name: invoice-api.rules
+      rules:
+
+        - alert: HighErrorRate
+          expr: |
+            sum(rate(http_request_duration_seconds_count{status_code=~"5.."}[5m]))
+            /
+            sum(rate(http_request_duration_seconds_count[5m]))
+            > 0.05
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Invoice API error rate above 5%"
+            description: "More than 5% of requests have returned 5xx errors over the last 5 minutes."
+
+        - alert: HighAPILatency
+          expr: |
+            histogram_quantile(0.95,
+              sum(rate(http_request_duration_seconds_bucket[5m])) by (le)
+            ) > 2
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Invoice API p95 latency above 2s"
+            description: "95th percentile request latency has exceeded 2 seconds for 5 minutes."
+
+        - alert: LLMCostSpike
+          expr: |
+            sum(increase(llm_cost_usd_total[1h])) > 1.0
+          labels:
+            severity: warning
+          annotations:
+            summary: "LLM spend exceeded $1 in the last hour"
+            description: "Estimated LLM cost has spiked - check for a bad prompt version or retry loop."
+
+        - alert: InvoiceQueueBacklog
+          expr: invoice_queue_depth > 50
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Invoice queue backlog above 50 jobs"
+            description: "Jobs are piling up faster than workers can process them."
+
+        - alert: PodCrashLooping
+          expr: |
+            rate(kube_pod_container_status_restarts_total{namespace="invoice-triage"}[15m]) > 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Pod {{ $labels.pod }} is crash looping"
+            description: "Container {{ $labels.container }} has restarted repeatedly in the last 15 minutes."
