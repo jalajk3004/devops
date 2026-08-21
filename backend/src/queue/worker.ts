@@ -1,8 +1,9 @@
 import { Worker, Job } from "bullmq";
+import express from "express";
 import { connection, INVOICE_QUEUE_NAME, InvoiceJobData } from "./queue";
 import { prisma } from "../db/client";
 import { extractInvoiceData } from "../services/extraction";
-import { invoicesProcessedTotal } from "../metrics";
+import { invoicesProcessedTotal, registry } from "../metrics";
 import { logger } from "../logger";
 
 const MAX_ATTEMPTS = 3;
@@ -71,7 +72,24 @@ export function startWorker() {
   return worker;
 }
 
+// The worker is a separate process from the API - it needs its own tiny
+// HTTP server just to expose /metrics, since Prometheus can only scrape
+// metrics from whatever process actually served them over HTTP, not
+// whichever process happened to increment the in-memory counter.
+function startMetricsServer() {
+  const app = express();
+  app.get("/metrics", async (_req, res) => {
+    res.set("Content-Type", registry.contentType);
+    res.end(await registry.metrics());
+  });
+  const port = Number(process.env.METRICS_PORT || 9100);
+  app.listen(port, () => {
+    logger.info({ port }, "worker metrics server listening");
+  });
+}
+
 if (require.main === module) {
   logger.info("invoice-triage worker starting");
+  startMetricsServer();
   startWorker();
 }
