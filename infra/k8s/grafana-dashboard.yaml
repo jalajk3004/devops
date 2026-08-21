@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: invoice-triage-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  invoice-triage-dashboard.json: |
+    <paste your JSON here, indented to match this level>
